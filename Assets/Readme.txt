@@ -1,0 +1,1 @@
+https://forum.unity.com/threads/change-color-of-an-individual-game-object.51117/
