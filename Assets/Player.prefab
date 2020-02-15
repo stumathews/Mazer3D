@@ -277,11 +277,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e903356024635814ab132fbd2bfadf2e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  batteryCollect: {fileID: 8300000, guid: 602dc97130e788a47b643552a248da4b, type: 3}
-  destroyWall: {fileID: 8300000, guid: 6211e416bf02569439547b35198f141e, type: 3}
-  moveSpeed: 10
+  batteryCollect: {fileID: 8300000, guid: 15f6d83645bae374bb3fadffcb5c2b53, type: 3}
+  destroyWall: {fileID: 8300000, guid: aa672728551f5b8478a21d72dea02813, type: 3}
+  moveSpeed: 15
   siren: {fileID: 1613353899983348}
-  targetTime: 60
+  SirenLightFlashIntervalTime: 0
   YellowMaterial: {fileID: 2100000, guid: b55cd4d02773fbd428ac384197885b7e, type: 2}
   RedMaterial: {fileID: 2100000, guid: c3410410e2ff4014fb5dd2a31c2dd117, type: 2}
 --- !u!135 &135957576094888320

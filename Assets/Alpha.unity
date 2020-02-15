@@ -654,10 +654,11 @@ MonoBehaviour:
   Stage: {fileID: 1909381193}
   Fuel: {fileID: 1087225483290922, guid: 4cac754fd47c9ba41b071f7b3ce0ee14, type: 2}
   Player: {fileID: 1827239667154224, guid: 549209621f342d64791ce52c9a55c820, type: 2}
-  RotationSound: {fileID: 8300000, guid: 5ac48d7cc7eff63409775156081e1378, type: 3}
   RotateAngle: 90
   VictoryMusic: {fileID: 8300000, guid: d161a756a299f7745b8383f1ed37257d, type: 3}
   mainLevelMusic: {fileID: 992441832}
+  RotationSound: {fileID: 8300000, guid: 927b1a699d532df4d9b2c8e3a2d76a50, type: 3}
+  failSound: {fileID: 8300000, guid: 02ba6dba6e6025447803dc26aae0335b, type: 3}
 --- !u!81 &1649275091
 AudioListener:
   m_ObjectHideFlags: 0
@@ -731,8 +732,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b824547533da0242a1901ff97ebc884, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Minutes: 5
-  Seconds: 0
 --- !u!82 &1649275096
 AudioSource:
   m_ObjectHideFlags: 0

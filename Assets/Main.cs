@@ -8,111 +8,169 @@ using Random = System.Random;
 [RequireComponent(typeof(AudioSource))]
 public class Main : MonoBehaviour
 {
+    // easy way to reason about which sides of the walls we are refering to
     public enum RoomSide {BottomSide = 1, RightSide = 2, TopSide = 3, LeftSide = 4};
 
+    // The walls that we will be placing strategically on the playing area
     public GameObject LeftCube;
     public GameObject RightCube;
     public GameObject TopCube;
     public GameObject BottomCube;
+
+    // So we can rotate it
     public GameObject Stage;
+
+    // the fuel game object which is just a battery 
     public GameObject Fuel;
+    
+    // the player gme object
     public GameObject Player;
-    public AudioClip RotationSound;
+    
+    
+    // Where we store the string representation of our score
     public static string Score;
+
+    // how much are we going to rotate to board?
     public float RotateAngle;
-    public static string Time = string.Empty;
-    public static bool timeUp = false;
+
+    // FX
     public AudioClip VictoryMusic;
     public AudioSource mainLevelMusic;
+    public AudioClip RotationSound;
+    public AudioClip failSound;
+    
+    // custom setting that represents how much time it costs to blow up a wall/remove it
+    public static int digTimeDisadvantage;
 
+    // our random number genreator to randonly remove walls, place fuel and the player
     static readonly Random randomGenerator = new Random(DateTime.Now.Millisecond);
+    
+    // The theoretical model of our playing board
     readonly List<Square> _mazeGrid = new List<Square>();
    
+    // our level timer
+    public static Timer LevelTimer = new Timer(mins, secs);
+    
+    // timer defaults
+    public static int mins = 5;
+    public static int secs = 0;
+    
+    // how much fual we have left to collect in the level
+    public static int FuelLeft;
+
+
+    // are we there yet?
+    private bool isVictory = false;
+
+    // misc settings that are self explanatory
     static int screenWidth = 10;
     static int screenHeight = 10;	
     static int roomWidth = 1;
     readonly int _maxRows = screenWidth/roomWidth;
     readonly int _maxColumns = screenHeight/roomWidth;
     bool removeSidesRandonly = true;
-    private bool isVictory = false;
+    public static bool endSceneStarted = false;
     
-    public static int FuelLeft;
-
     void  OnGUI()
     {
-        GUI.Box(new Rect(0,0,200,25), !timeUp ? "Remaining Items:"+Score : Score);
-        GUI.Box(new Rect(0,30,200,25), "Time left:"+Time);
+        // draw our score
+        GUI.Box(new Rect(0,0,200,25), Score);
+        GUI.Box(new Rect(0,30,200,25), "Time left:" + LevelTimer.ToString());
     }
 
     void LevelReset()
     {
         isVictory = false;
         Score = string.Empty;
-        timeUp = false;
+        LevelTimer.TimeUp = false;
+        digTimeDisadvantage = 10;
+        LevelTimer = new Timer(mins,secs);
     }
 
     // Use this for initialization
 	void Start ()
 	{
-
 	    LevelReset();
+	    // lets make the user provided prefabs globally accessible (just to make communication easier in this prototype)
 	    Square.Plane = Stage;
 	    Square.TopCube = TopCube;
 	    Square.BottomCube = BottomCube;
 	    Square.RightCube = RightCube;
 	    Square.LeftCube = LeftCube;
+	    
+        // Auto-generate a level
 	    DrawLevel(_maxColumns, _maxRows, roomWidth);
 	}
 
     // Update is called once per frame
 	void Update ()
 	{
-
+        // update the timer
+	    LevelTimer.Update();
+        
+        // should we rotate the board?
 	    if (Input.GetKeyDown(KeyCode.R))
 	    {
 	        Stage.transform.Rotate(0, RotateAngle, 0f);
-            GetComponent<AudioSource>().PlayOneShot(RotationSound);
+            GetComponent<AudioSource>().PlayOneShot(RotationSound); // make woosh sound
 	    }
 
+        // lets get out of here!
 	    if (Input.GetKeyDown(KeyCode.Escape))
 	    {
             LevelReset();
             SceneManager.LoadScene("MenuScene");
 	    }
 
-	    // Update the main Score with the text
-	    Score = FuelLeft.ToString();
-	    if ((FuelLeft == 0 && !isVictory) || Input.GetKeyDown(KeyCode.W))
+	    
+        // check for victory:
+	    if (FuelLeft == 0 && !isVictory || Input.GetKeyDown(KeyCode.W)) // we can explicitly win by pressing 'W' - cheat
 	    {
-            // win
-	        if ((!timeUp && !isVictory)|| Input.GetKeyDown(KeyCode.W))
+            // win condition
+	        if ((!LevelTimer.TimeUp || Input.GetKeyDown(KeyCode.W)) && !endSceneStarted)
 	        {
-	            isVictory = true;
 	            mainLevelMusic.Stop();
-                
 	            GetComponent<AudioSource>().PlayOneShot(VictoryMusic);
-                
-	            
-	            Score = "You Win!";
+	            endSceneStarted = true;
+	            Score = "YOU WIN!";
+	            isVictory = true;
 	        }
 	    }
 	    else
 	    {
-            if(timeUp)
-                Score = "Sorry, you Lose!";
+	        if ((LevelTimer.TimeUp && !isVictory || Input.GetKeyDown(KeyCode.F)) && !endSceneStarted)
+	        {
+	            mainLevelMusic.Stop();
+	            GetComponent<AudioSource>().PlayOneShot(failSound);
+	            endSceneStarted = true;
+	            Score = "Sorry, you Lose!";
+	            isVictory = false;
+	        }
 	    }
 
-	    if (!GetComponent<AudioSource>().isPlaying && isVictory)
+	    if (endSceneStarted)
+	    {
+	        LevelTimer.StopTimer();
+	    }
+	    else
+	    {
+	        Score = "Remaining Items:" + FuelLeft.ToString(); // Update the main Score with the text
+	    }
+
+
+	    if (!GetComponent<AudioSource>().isPlaying && endSceneStarted)
 	    {
 	        LevelReset();
 	        SceneManager.LoadScene("MenuScene");
-	        
+	        endSceneStarted = false;
 	    }
 
 	}
 
+    // Draws a maxRows x maxCols board of roomWidth(which we only ever set to 1)
     private void DrawLevel(int maxColumns, int maxRows, int roomWidth)
     {
+        // make a whole bunch of squares (these will represnt each room/tunnel)
         for (int y = 0; y < maxColumns; y++)
         {
             for (int x = 0; x < maxRows; x++)
@@ -123,7 +181,7 @@ public class Main : MonoBehaviour
 
         var totalRooms = _mazeGrid.Count;
 
-        
+        // determine which sides can be removed and then randonly remove a number of them (using only the square objects - no drawing yet)
         for (int i = 0; i < totalRooms; i++)
         {
             var nextIndex = i + 1;
@@ -159,10 +217,12 @@ public class Main : MonoBehaviour
             if (canRemoveRight && currentRoom.IsWalled(RoomSide.RightSide) && _mazeGrid[roomRightIndex].IsWalled(RoomSide.LeftSide))
                 removableSides.Add(RoomSide.RightSide);
 
+            // which of the sides should we remove for this square?
+
             int rInt = randomGenerator.Next(0, removableSides.Count-1);
             int randSideIndex = rInt;
             
-            if (removeSidesRandonly)
+            if (removeSidesRandonly) // this should always be set
             {
                 switch (removableSides[randSideIndex])
                 {
@@ -188,16 +248,26 @@ public class Main : MonoBehaviour
         }
 
 
+
+        // In which square/room should we place the player?
         var playermazePosition = randomGenerator.Next(0, _mazeGrid.Count);
-        Debug.Log("Size of grid is: " + _mazeGrid.Count);
         for (int i = 0; i < _mazeGrid.Count;i++)
         {
             var square = _mazeGrid[i];
+
+            // this is where all the action happens: draw the square using the prefabs
             square.Draw();
 
+            // place the fual here
             if (randomGenerator.Next(0, 3) == 1)
+            {
+                Debug.Log("placing fuel...");
                 square.PlaceFuel(Fuel);
+                Debug.Log("placing fuel...done");
+            }
 
+
+            // place the player here
             if (i == playermazePosition)
                 square.PlacePlayer(Player);
         }

@@ -61,6 +61,11 @@ namespace Assets
             }
         }
 
+        /// <summary>
+        /// Place the prefab for each wall at the starting point and rotate it if needed (bottom and tops)
+        /// </summary>
+        /// <param name="starting"></param>
+        /// <param name="name"></param>
         void DrawCubeLine(Vector3 starting, string name)
         {
             var start = starting;
@@ -88,13 +93,19 @@ namespace Assets
                     break;
             }
             obj.name = name;
+            // important bit, this alows us to rotate all the items with the stage/plane
             obj.transform.parent = Plane.transform;
-            
-
-
 
         }
 
+        /// <summary>
+        /// This function will determine the corners of the square, place the prefabs on them and rotate them as nessesary to make up a wall
+        /// 
+        /// d---c
+        /// |   |
+        /// |   |
+        /// a___b
+        /// </summary>
         public void Draw()
         {
             float offset = 0.0f;
@@ -106,6 +117,8 @@ namespace Assets
             float cy = rectDetails.getCy() + offset; // but is it really the height
             float dx = rectDetails.getDx() + offset;
             float dy = rectDetails.getDy() + offset;
+            
+            //  walls are stored in an array of true/false that indicatres if that wall position is enabled or removed
             if (walls[0])
             {
                 DrawCubeLine(new Vector3(ax,0,ay), "Bottom");
@@ -145,20 +158,25 @@ namespace Assets
 
         public void PlaceFuel(GameObject fuel)
         {
+            if(fuel == null)
+                Debug.Log("Fuel prefab is mull");
             const float offset = 0.5f;
+            // lets place it relative to the position of the middle of the current square(rectdetails)
             var centre = new Vector3(rectDetails.getAx() + offset, 0 ,rectDetails.getAy() + offset);
             
             // Plonk some fuel down
             Instantiate(fuel, centre , Quaternion.Euler(0,0,0));
-            fuel.transform.parent = Plane.transform;
-            fuel.transform.localScale = new Vector3(0.5f,0.5f,0.5f);
+            fuel.transform.parent = Plane.transform; // rotate with stage pleases
+            fuel.transform.localScale = new Vector3(0.5f,0.5f,0.5f); // Dyanimcally change the scale (should have really done this on import)
 
+            // we've added more fual to the level
             Main.FuelLeft++;
             
         }
 
         public void PlacePlayer(GameObject player)
         {
+            // just like placing fuel
             const float offset = 0.5f;
             var centre = new Vector3(rectDetails.getAx() + offset, 0 ,rectDetails.getAy() + offset);
             Instantiate(player, centre , Quaternion.Euler(0,0,0));
